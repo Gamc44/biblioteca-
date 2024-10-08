@@ -1,1 +1,92 @@
+class Autor:
+    def __init__(self, id, nombre, pais):
+        if not isinstance(id, int) or id <= 0:
+            raise ValueError("El ID debe ser un número positivo.")
+        if not nombre.strip():
+            raise ValueError("El nombre no puede estar vacío.")
+        if not pais_existe(pais):
+            raise ValueError("El país no es válido.")
+        
+        self.id = id
+        self.nombre = nombre
+        self.pais = pais
 
+    def escribir_libro(self, titulo):
+        return f'{self.nombre} ha escrito el libro titulado {titulo}.'
+
+    def __str__(self):
+        return f'Autor: {self.nombre} de {self.pais}.'
+
+class Biblioteca:
+    def __init__(self):
+        self.libros = []
+        self.usuarios = []
+        self.prestamos = []
+
+    def agregar_libro(self, libro):
+        if isinstance(libro, Libro):
+            self.libros.append(libro)
+        else:
+            raise ValueError("El objeto no es un libro válido.")
+
+    def agregar_usuario(self, usuario):
+        if isinstance(usuario, Usuario):
+            self.usuarios.append(usuario)
+        else:
+            raise ValueError("El objeto no es un usuario válido.")
+
+    def prestar_libro(self, libro_id, usuario_id, fecha_prestamo):
+        libro = self.buscar_libro(libro_id)
+        usuario = self.buscar_usuario(usuario_id)
+        if libro and usuario:
+            prestamo = Prestamo(usuario, libro, fecha_prestamo)
+            self.prestamos.append(prestamo)
+            return prestamo
+        else:
+            raise ValueError("Libro o Usuario no encontrados.")
+
+    def calcular_multa(self, prestamo, fecha_devolucion):
+        return calcular_multa(prestamo.fecha_prestamo, fecha_devolucion)
+
+    def buscar_libro(self, libro_id):
+        return next((libro for libro in self.libros if libro.id == libro_id), None)
+
+    def buscar_usuario(self, usuario_id):
+        return next((usuario for usuario in self.usuarios if usuario.id == usuario_id), None)
+
+    def eliminar_libro(self, libro_id):
+        libro = self.buscar_libro(libro_id)
+        if libro:
+            self.libros.remove(libro)
+
+    def eliminar_usuario(self, usuario_id):
+        usuario = self.buscar_usuario(usuario_id)
+        if usuario:
+            self.usuarios.remove(usuario)
+class Usuario:
+    def __init__(self, id, nombre, tipo_usuario):
+        if not isinstance(id, int) or id <= 0:
+            raise ValueError("El ID debe ser un número positivo.")
+        if not nombre.strip():
+            raise ValueError("El nombre no puede estar vacío.")
+        
+        self.id = id
+        self.nombre = nombre
+        self.tipo_usuario = tipo_usuario
+
+    def __str__(self):
+        return self.nombre
+class Prestamo:
+    def __init__(self, usuario, libro, fecha_prestamo):
+        self.usuario = usuario
+        self.libro = libro
+        self.fecha_prestamo = fecha_prestamo
+        self.fecha_devolucion = None
+
+    def devolver(self, fecha_devolucion):
+        if self.fecha_devolucion is not None:
+            raise ValueError("El libro ya fue devuelto.")
+        self.fecha_devolucion = fecha_devolucion
+
+    def esta_devuelto(self):
+        return self.fecha_devolucion is not None
