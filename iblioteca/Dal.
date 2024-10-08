@@ -1,1 +1,101 @@
+CREATE TABLE IF NOT EXISTS libros (
+    id INTEGER PRIMARY KEY,
+    titulo TEXT NOT NULL,
+    autor TEXT,
+    categoria TEXT,
+    editorial TEXT
+);
 
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    tipo TEXT
+);
+
+CREATE TABLE IF NOT EXISTS prestamos (
+    id INTEGER PRIMARY KEY,
+    usuario_id INTEGER,
+    libro_id INTEGER,
+    fecha_prestamo TEXT,
+    fecha_devolucion TEXT,
+    FOREIGN KEY(usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY(libro_id) REFERENCES libros(id)
+);
+INSERT INTO libros (titulo, autor, categoria, editorial) VALUES
+('El Principito', 'Antoine de Saint-Exupéry', 'Ficción', 'Editorial XYZ'),
+('1984', 'George Orwell', 'Ficción', 'Editorial ABC');
+
+INSERT INTO usuarios (nombre, tipo) VALUES 
+('Juan Perez', 'Administrador'),
+('Maria Lopez', 'Cliente');
+
+INSERT INTO prestamos (usuario_id, libro_id, fecha_prestamo) VALUES 
+(1, 1, '2024-10-01'),
+(2, 2, '2024-10-03');
+import sqlite3
+
+class DBConnection:
+    def __init__(self, db_file):
+        try:
+            self.connection = sqlite3.connect(db_file)
+            self.cursor = self.connection.cursor()
+        except sqlite3.Error as e:
+            print(f"Error al conectar a la base de datos: {e}")
+    
+    def ejecutar_consulta(self, consulta, parametros=()):
+        try:
+            self.cursor.execute(consulta, parametros)
+            self.connection.commit()
+        except sqlite3.Error as e:
+            print(f"Error al ejecutar consulta: {e}")
+    
+    def obtener_datos(self, consulta, parametros=()):
+        try:
+            self.cursor.execute(consulta, parametros)
+            return self.cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Error al obtener datos: {e}")
+            return None
+
+    def cerrar(self):
+        self.connection.close()
+
+def iniciar_conexion():
+    return DBConnection('biblioteca.db')
+import json
+from .db import DBConnection
+
+def cargar_libros():
+    with open('libros.json', 'r') as file:
+        libros = json.load(file)
+    
+    conexion = DBConnection('biblioteca.db')
+    for libro in libros:
+        conexion.ejecutar_consulta(
+            'INSERT INTO libros (id, titulo, autor, categoria, editorial) VALUES (?, ?, ?, ?, ?)',
+            (libro['id'], libro['titulo'], libro['autor'], libro['categoria'], libro['editorial'])
+        )
+    conexion.cerrar()
+
+def cargar_usuarios():
+    with open('usuarios.json', 'r') as file:
+        usuarios = json.load(file)
+    
+    conexion = DBConnection('biblioteca.db')
+    for usuario in usuarios:
+        conexion.ejecutar_consulta(
+            'INSERT INTO usuarios (id, nombre, tipo) VALUES (?, ?, ?)',
+            (usuario['id'], usuario['nombre'], usuario['tipo'])
+        )
+    conexion.cerrar()
+def buscar_libro(libro_id):
+    conexion = DBConnection('biblioteca.db')
+    libro = conexion.obtener_datos('SELECT * FROM libros WHERE id = ?', (libro_id,))
+    conexion.cerrar()
+    return libro
+
+def buscar_usuario(usuario_id):
+    conexion = DBConnection('biblioteca.db')
+    usuario = conexion.obtener_datos('SELECT * FROM usuarios WHERE id = ?', (usuario_id,))
+    conexion.cerrar()
+    return usuario
