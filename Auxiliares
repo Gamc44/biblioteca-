@@ -1,0 +1,13 @@
+from datetime import datetime, timedelta
+from .constantes import MAX_LIBROS_PRESTADOS, TIEMPO_MAX_PRESTAMO, MULTA_POR_DIA
+
+def calcular_multa(fecha_prestamo, fecha_devolucion):
+    dias_totales = (fecha_devolucion - fecha_prestamo).days
+    dias_retraso = dias_totales - TIEMPO_MAX_PRESTAMO
+    if dias_retraso > 0:
+        return dias_retraso * MULTA_POR_DIA
+    return 0
+
+def dias_prestamo(fecha_prestamo):
+    hoy = datetime.now().date()
+    return (hoy - fecha_prestamo).days
